@@ -1,0 +1,70 @@
+---
+- hosts: nodes
+  become_user: ec2-user
+  become: true
+  become_user: root
+  become_method: sudo
+
+
+  tasks:
+
+   - name: copying the required repository to target nodes
+     copy:
+      src: /etc/yum.repos.d/open.repo
+      dest: /etc/yum.repos.d/open.repo
+      owner: root
+      group: root
+      mode: 0644
+      backup: yes
+
+   - name: Update the Systems
+     shell: "yum update -y && yum install vim git lvm2 python bash-completion -y"
+
+   - name: Installing NetworkManager Packages
+     yum: name=NetworkManager  state=present
+
+#   - name: start the service
+#     service: name=NetworkManager state=started enabled=yes
+#     register: NetworkManager_state
+
+   - name: Verifying and uninstall the Docker if exist
+     yum: name=docker state=absent
+
+   - name: Installing Docker Deamon
+     yum: name=docker state=present
+
+   - name: Stopping Docker service
+     shell: "systemctl stop docker ; rm -rf /var/lib/docker/*"
+
+#     copy: 'dest=/root/docker-storage-setup content="DEVS=/dev/vdb\nVG=docker-vg"'
+
+   - name: Setting up Docker Storage
+     copy:
+       src: /root/docker-storage-setup
+       dest: /etc/sysconfig/docker-storage-setup
+       owner: root
+       group: root
+       mode: 0644
+       backup: yes
+
+   - name: Clean up Disk Partions - Read device information (always use unit when probing)
+     parted: device=/dev/xvdf unit=MiB
+     register: xvdf_info
+
+   - name: Remove all partitions from disk
+     parted:
+      device: /dev/xvdf
+      number: "{{ item.num }}"
+      state: absent
+     with_items:
+      - "{{ xvdf_info.partitions }}"
+
+   - name: Wipe signatures using wipefs
+     shell: "wipefs --all --force /dev/xvdf"
+
+   - name: Creaing a Docker LVM Volume
+     shell: docker-storage-setup
+
+   - name: Enable & Start the Docker Service
+     service: name=docker state=started enabled=yes
+
