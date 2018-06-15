@@ -1,0 +1,49 @@
+[OSEv3:children]
+masters
+nodes
+etcd
+
+# Set variables common for all OSEv3 hosts
+[OSEv3:vars]
+# SSH user, this user should allow ssh based auth without requiring a password
+ansible_ssh_user=root
+ansible_ssh_private_key_file=/root/.ssh/AWS-EKS-Key.pem
+
+# If ansible_ssh_user is not root, ansible_become must be set to true
+ansible_become=true
+openshift_deployment_type=origin
+openshift_release=3.9
+#openshift_pkg_version=-3.9.0
+#openshift_version=v3.9.0
+#openshift_release=v3.9.0
+#openshift_image_tag=v3.9.0
+containerized=true
+#openshift_pkg_version=-3.6
+#openshift_image_tag=v3.5.1-alpha.1
+openshift_router_selector='router=true'
+openshift_registry_selector='registry=true'
+openshift_master_default_subdomain=23.23.67.210.xip.io
+
+# enable htpasswd auth
+openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 'challenge': 'true', 'kind': 'HTPasswdPasswordIdentityProvider', 'filename': '/etc/origin/master/htpasswd'}]
+openshift_master_htpasswd_users={'admin': '$apr1$zgSjCrLt$1KSuj66CggeWSv.D.BXOA1', 'ashok': '$apr1$.gw8w9i1$ln9bfTRiD6OwuNTG5LvW50'}
+
+# uncomment the following to enable htpasswd authentication; defaults to DenyAllPasswordIdentityProvider
+#openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 'challenge': 'true', 'kind': 'HTPasswdPasswordIdentityProvider'}]
+
+
+
+# host group for masters
+[masters]
+54.83.143.119 openshift_public_hostname=54.83.143.119 openshift_hostname=10.0.1.233
+
+# host group for etcd
+[etcd]
+54.83.143.119
+
+
+# host group for nodes, includes region info
+[nodes]
+54.83.143.119   openshift_hostname=10.0.1.233 openshift_node_group_name="node-config-infra"  openshift_schedulable=true
+52.87.115.204   openshift_hostname=10.0.1.187  openshift_node_group_name="node-config-infra" openshift_node_labels="{'region': 'primary', 'zone': 'east'}"
+23.23.67.210    openshift_hostname=10.0.1.103  openshift_node_group_name="node-config-infra" openshift_node_labels="{'region': 'infra', 'zone': 'default'}"
