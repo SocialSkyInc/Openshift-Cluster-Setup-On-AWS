@@ -1,0 +1,4 @@
+git clone https://github.com/openshift/openshift-ansible
+git checkout release-3.9
+ansible-playbook -i /etc/ansible/hosts /root/openshift-ansible/playbooks/prerequisites.yml
+ansible-playbook -i /etc/ansible/hosts /root/openshift-ansible/playbooks/deploy_cluster.yml
