@@ -11,6 +11,10 @@ yum install epel-release -y
 # Installing the Python-pip Repository
 yum install python-pip git python-lxml -y 
 
+
+# Install Development Tools
+yum install gcc glibc glibc-common gd gd-devel -y
+
 # Clone the Openshift Repository into root Home directory
 
 git clone https://github.com/openshift/openshift-ansible.git /root/openshift-ansible
